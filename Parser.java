@@ -1,80 +1,89 @@
 package littlehtml;
 
+import com.google.common.collect.Table;
+
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
-import java.util.stream.Collectors;
 
 public class Parser {
 
-    private Stack<String> stack = new Stack<>();
-    private Printer output;
+    public static final String EPSILON = "ε";
 
     private static final Set<String> terminals = new HashSet<>();
     private static final Set<String> nonterminals = new HashSet<>();
 
-    // maps input term to rule
-    private static final Map<String, Rule> table = new HashMap<>();
+    // table with rules
+    private Table<String, String, Rule> table;
 
-    // maps rule id to rule
-    private static final Map<Integer, Rule> rules = new HashMap<>();
-
-    static {
-        addRule(1, "S", "(", "S", ")");
-        addRule(2, "S", "e");
-
-        addToTable("(", 1);
-        addToTable(")", 2);
-        addToTable("$", 3);
-
-        terminals.addAll(table.keySet());
-        nonterminals.addAll(rules.values().stream().map(Rule::getLeftSide).collect(Collectors.toList()));
-    }
+    private Stack<String> stack = new Stack<>();
+    private Printer output;
 
     Parser (Printer printer) {
         this.output = printer;
+        table = new TableFactory().createTable();
+        terminals.addAll(table.columnKeySet());
+        nonterminals.addAll(table.rowKeySet());
+
+////////////////////////////
+//        terminals.add("<html>");
+//        terminals.add("</html>");
+//        terminals.add("a");
+//        terminals.add("b");
+//        nonterminals.addAll(rules.values().stream().map(Rule::getLeftSide).collect(Collectors.toList()));
     }
 
     String parse(String input) throws ParseException {
-        int i = 0;
+        int step = 0;
         String[] inputTerms = input.replaceAll(">","> ").replaceAll("<"," <").replaceAll("=","= ").split("\\s+");
+
         List<String> inputs = arrayToList(inputTerms);
 
         clearStack();
         System.out.println("nonterm:"  + nonterminals);
+        System.out.println("terminals:" + terminals);
+        System.out.println("table:" + table);
+
+        for (String term : inputs) {
+            output.print(term);
+        }
 
         for (String term : inputs) {
             output.print("-------");
-            output.print("[" + ++i + "]\tParsing term: " + term, false);
-            System.out.println("[" + i + "] Parsing term " + term);
+            output.print("[" + ++step + "]\tParsing term: " + term, false);
+            System.out.println("[" + step + "] Parsing term " + term);
             output.print(stack);
 
-            while (!term.equals(stack.lastElement())) {
-                System.out.println("while: " + term + "!=" + stack.lastElement());
+            while (!term.equals(stack.peek())) {
+                System.out.println("while: " + term + "!=" + stack.peek());
 
-                if (!isNonTerminal(stack.lastElement())) {
-                    throw new ParseException("Unknown symbol on top of stack: " + stack.lastElement(), i);
+                if (!isTerminal(term)) {
+                    throw new ParseException("Unknown term: " + term, step);
                 }
 
-                if (!nonterminals.contains(term) && !terminals.contains(term)) {
-                    throw new ParseException("Unknown term: " + term, i);
+                if (!isNonTerminal(stack.peek())) {
+                    throw (stack.size() == 1) ?
+                            new ParseException("Bottom of stack was reached, cannot continue" , step)
+                            : new ParseException("Unknown symbol on top of stack: " + stack.peek(), step);
                 }
 
-                // if nonterminal, use rule from table
-                stack.pop();
-                Rule rule = table.get(term);
+                // use rule from table
+                Rule rule = table.column(term).get(stack.peek());
+                if (rule == null) {
+                    throw new ParseException("No rule defined for: " + term + " x " + stack.peek(), step);
+                }
                 List<String> rightSide = rule.getRightSide();
                 output.print("Applying rule " + rule);
 
+                stack.pop();
+
                 // if epsilon rule -> only pop
-                if ("e".equals(rightSide.get(0))) {
+                if (EPSILON.equals(rightSide.get(0))) {
                     output.print("Epsilon rule -> pop");
                     output.print(stack);
                     continue;
@@ -99,13 +108,14 @@ public class Parser {
         if (stack.size() <= 1) {
             return("DONE - SUCCESS");
         } else {
-            return("Finished parsing, but stack is not empty!");
+            throw new ParseException("Finished parsing, but stack is not empty!", step);
         }
     }
 
     private void clearStack() {
         stack.clear();
         stack.push("$");
+//        stack.push("htmldocument");
         stack.push("S");
     }
 
@@ -113,13 +123,20 @@ public class Parser {
         List<String> list = new ArrayList<>();
 
         for (String s : inputTerms) {
-            if (s.endsWith(">") && !isTerminal(s)) {
+            if (s.length() < 1) {
+                continue;
+            } else if (s.endsWith(">") && !isTerminal(s)) {
 //                System.out.println("FCS REPLACING: " + s);
                 s = s.replaceAll(">", "");
                 list.add(s);
                 list.add(">");
                 continue;
+            } else if (!isTerminal(s)) {
+                // split to chars
+                Collections.addAll(list, s.split(""));
+                continue;
             }
+
             list.add(s);
         }
         return list;
@@ -131,14 +148,6 @@ public class Parser {
 
     private boolean isNonTerminal(String s) {
         return nonterminals.contains(s);
-    }
-
-    private static void addToTable(String s, int ruleNumber) {
-        table.put(s, rules.get(ruleNumber));
-    }
-
-    private static void addRule(int id, String left, String... right) {
-        rules.put(id, new Rule(id, left, Arrays.asList(right)));
     }
 
 }

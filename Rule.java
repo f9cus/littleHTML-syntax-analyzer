@@ -4,9 +4,9 @@ import java.util.List;
 
 public class Rule {
 
-    private int id;
-    private String leftSide;
-    private List<String> rightSide;
+    private final int id;
+    private final String leftSide;
+    private final List<String> rightSide;
 
     public Rule(int id, String leftSide, List<String> rightSide) {
         this.id = id;
@@ -28,7 +28,7 @@ public class Rule {
 
     @Override
     public String toString() {
-        return "#" + id + ": " + leftSide + " -> " + rightSide;
+        return "#" + id + ": " + leftSide + " -> " + String.join(" ", rightSide);
     }
 
 }

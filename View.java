@@ -13,7 +13,7 @@ import javafx.stage.Stage;
 
 import java.text.ParseException;
 
-public class Main extends Application {
+public class View extends Application {
 
     @Override
     public void start(Stage stage) {
@@ -54,7 +54,7 @@ public class Main extends Application {
 
         buttonAnalyze.setOnAction(e -> {
             logArea.clear();
-            String result = null;
+            String result;
             try {
                 result = parser.parse(textArea.getText());
                 output.setText("OK: " + result);
