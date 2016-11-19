@@ -1,12 +1,14 @@
-package littlehtml;
+package littlehtml.factory;
+
+import littlehtml.analyzer.Rule;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import static littlehtml.Parser.EPSILON;
-
 public class RuleFactory {
+
+    public static final String EPSILON = "ε";
 
     private static final Map<Integer, Rule> rules = new HashMap<>();
 

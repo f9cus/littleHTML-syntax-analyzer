@@ -1,7 +1,8 @@
-package littlehtml;
+package littlehtml.factory;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
+import littlehtml.analyzer.Rule;
 
 import java.util.Map;
 

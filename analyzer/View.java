@@ -1,4 +1,4 @@
-package littlehtml;
+package littlehtml.analyzer;
 
 import javafx.application.Application;
 import javafx.geometry.HPos;

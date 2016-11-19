@@ -1,6 +1,7 @@
-package littlehtml;
+package littlehtml.analyzer;
 
 import com.google.common.collect.Table;
+import littlehtml.factory.TableFactory;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -11,9 +12,9 @@ import java.util.ListIterator;
 import java.util.Set;
 import java.util.Stack;
 
-public class Parser {
+import static littlehtml.factory.RuleFactory.EPSILON;
 
-    public static final String EPSILON = "ε";
+public class Parser {
 
     private static final Set<String> terminals = new HashSet<>();
     private static final Set<String> nonterminals = new HashSet<>();

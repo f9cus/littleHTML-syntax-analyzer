@@ -1,4 +1,4 @@
-package littlehtml;
+package littlehtml.analyzer;
 
 import java.util.List;
 
