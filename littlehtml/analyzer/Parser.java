@@ -31,12 +31,9 @@ public class Parser {
         terminals.addAll(table.columnKeySet());
         nonterminals.addAll(table.rowKeySet());
 
-////////////////////////////
-//        terminals.add("<html>");
-//        terminals.add("</html>");
-//        terminals.add("a");
-//        terminals.add("b");
-//        nonterminals.addAll(rules.values().stream().map(Rule::getLeftSide).collect(Collectors.toList()));
+        terminals.add("</html>");
+        terminals.add("name=");
+        terminals.add("</li>");
     }
 
     String parse(String input) throws ParseException {
@@ -46,31 +43,30 @@ public class Parser {
         List<String> inputs = arrayToList(inputTerms);
 
         clearStack();
-        System.out.println("nonterm:"  + nonterminals);
-        System.out.println("terminals:" + terminals);
-        System.out.println("table:" + table);
 
-        for (String term : inputs) {
-            output.print(term);
-        }
+//        for (String term : inputs) {
+//            output.print(term);
+//        }
 
         for (String term : inputs) {
             output.print("-------");
             output.print("[" + ++step + "]\tParsing term: " + term, false);
-            System.out.println("[" + step + "] Parsing term " + term);
-            output.print(stack);
 
             while (!term.equals(stack.peek())) {
-                System.out.println("while: " + term + "!=" + stack.peek());
-
                 if (!isTerminal(term)) {
-                    throw new ParseException("Unknown term: " + term, step);
+                    String recovered = recover(term);
+                    if (recovered != null) {
+                        output.print("Recovery performed: " + term + " -> " + recovered);
+                        term = recovered;
+                    } else {
+                        throw new ParseException("Unknown term: " + term, step);
+                    }
                 }
 
                 if (!isNonTerminal(stack.peek())) {
                     throw (stack.size() == 1) ?
-                            new ParseException("Bottom of stack was reached, cannot continue" , step)
-                            : new ParseException("Unknown symbol on top of stack: " + stack.peek(), step);
+                            new ParseException("Bottom of stack was reached, cannot continue", step)
+                            : new ParseException("No rule defined for: " + term + " x " + stack.peek(), step);
                 }
 
                 // use rule from table
@@ -106,18 +102,53 @@ public class Parser {
         output.print("-------");
         output.print(stack);
 
-        if (stack.size() <= 1) {
-            return("DONE - SUCCESS");
-        } else {
-            throw new ParseException("Finished parsing, but stack is not empty!", step);
+        if (stack.size() > 1) {
+            if (lexicalRecovery(stack)) {
+                parse(input + "</html>");
+                output.print("Applied recovery by adding </html>");
+            }
+            else {
+                throw new ParseException("Finished parsing, but stack is not empty!", step);
+            }
         }
+
+        return ("Input was accepted");
+    }
+
+    private boolean lexicalRecovery(Stack<String> stack) {
+        return stack.size() == 2 && stack.peek().equals("</html>");
+    }
+
+    private String recover(String term) {
+        for (String terminal: terminals) {
+            if (almostEqual(term, terminal)) {
+                return terminal;
+            }
+        }
+        return null;
+    }
+
+    private boolean almostEqual(String first, String second) {
+        if (first.length() != second.length() || first.length() < 2) {
+            return false;
+        }
+
+        int diff = 0;
+
+        for (int i = 0; i < first.length(); i++) {
+            if (first.charAt(i) != second.charAt(i)) {
+                if (++diff > 1) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private void clearStack() {
         stack.clear();
         stack.push("$");
-//        stack.push("htmldocument");
-        stack.push("S");
+        stack.push("htmldocument");
     }
 
     private List<String> arrayToList(String[] inputTerms) {
@@ -126,13 +157,14 @@ public class Parser {
         for (String s : inputTerms) {
             if (s.length() < 1) {
                 continue;
-            } else if (s.endsWith(">") && !isTerminal(s)) {
-//                System.out.println("FCS REPLACING: " + s);
+            }
+            else if (s.endsWith(">") && !isTerminal(s) && recover(s) == null) {
                 s = s.replaceAll(">", "");
-                list.add(s);
+                Collections.addAll(list, s.split(""));
                 list.add(">");
                 continue;
-            } else if (!isTerminal(s)) {
+            }
+            else if (!isTerminal(s) && recover(s) == null) {
                 // split to chars
                 Collections.addAll(list, s.split(""));
                 continue;

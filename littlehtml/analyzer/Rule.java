@@ -22,10 +22,6 @@ public class Rule {
         return rightSide;
     }
 
-    public int getId() {
-        return id;
-    }
-
     @Override
     public String toString() {
         return "#" + id + ": " + leftSide + " -> " + String.join(" ", rightSide);

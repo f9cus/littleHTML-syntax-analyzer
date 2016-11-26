@@ -15,7 +15,6 @@ public class Printer {
     public void print(Stack stack) {
         log.appendText("\tStack: ");
         log.appendText(stack.toString() + "\n");
-        System.out.println("stack:" + stack.toString());
     }
 
     public void print(String s) {

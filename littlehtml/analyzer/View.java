@@ -17,7 +17,6 @@ public class View extends Application {
 
     @Override
     public void start(Stage stage) {
-
         stage.setTitle("littleHTML syntax analyzer");
 
         GridPane rootNode = new GridPane();
@@ -28,11 +27,9 @@ public class View extends Application {
 
         Scene scene = new Scene(rootNode, 800, 600);
 
-//        rootNode.add(new Label("littleHTML input:"), 0, 0);
-
         TextArea textArea = new TextArea();
         textArea.setPrefRowCount(50);
-        textArea.setText("( ( ) ) ");
+        textArea.setText("Input");
         rootNode.add(textArea, 1, 0);
 
         TextArea logArea = new TextArea();
@@ -57,16 +54,15 @@ public class View extends Application {
             String result;
             try {
                 result = parser.parse(textArea.getText());
-                output.setText("OK: " + result);
+                output.setText("w ∈ L: " + result);
             } catch (ParseException ex) {
-                output.setText("ERROR: " + ex.getMessage());
+                output.setText("w ∉ L: " + ex.getMessage());
             }
         });
 
         stage.setScene(scene);
         stage.show();
     }
-
 
     public static void main(String[] args) {
         launch(args);
