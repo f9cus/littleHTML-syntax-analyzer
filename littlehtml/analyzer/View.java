@@ -55,8 +55,10 @@ public class View extends Application {
             try {
                 result = parser.parse(textArea.getText());
                 output.setText("w ∈ L: " + result);
+                output.setStyle("-fx-text-fill: green");
             } catch (ParseException ex) {
                 output.setText("w ∉ L: " + ex.getMessage());
+                output.setStyle("-fx-text-fill: red");
             }
         });
 

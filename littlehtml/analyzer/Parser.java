@@ -19,9 +19,7 @@ public class Parser {
     private static final Set<String> terminals = new HashSet<>();
     private static final Set<String> nonterminals = new HashSet<>();
 
-    // table with rules
     private Table<String, String, Rule> table;
-
     private Stack<String> stack = new Stack<>();
     private Printer output;
 
@@ -165,7 +163,6 @@ public class Parser {
                 continue;
             }
             else if (!isTerminal(s) && recover(s) == null) {
-                // split to chars
                 Collections.addAll(list, s.split(""));
                 continue;
             }
